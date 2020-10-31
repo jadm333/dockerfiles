@@ -8,6 +8,8 @@ ENV S6_VERSION=${S6_VERSION:-v1.21.7.0}
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 ENV PATH=/usr/lib/rstudio-server/bin:$PATH
 ENV PANDOC_TEMPLATES_VERSION=${PANDOC_TEMPLATES_VERSION:-2.9}
+ENV NCPUS=13
+ENV CRAN=
 
 RUN apt-get update -qq
 RUN apt-get install -y --no-install-recommends \
@@ -72,24 +74,36 @@ RUN Rscript -e "install.packages(c('littler', 'docopt'), repo = 'https://cran.rs
   && ln -s /usr/lib/R/library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
   && ln -s /usr/lib/R/library/littler/bin/r /usr/local/bin/r
 
+
+
 RUN apt-get update -qq && apt-get -y --no-install-recommends install \
   libxml2-dev \
   libcairo2-dev \
-  libsqlite-dev \
+  libgit2-dev \
   libpq-dev \
-  libssh2-1-dev \
-  unixodbc-dev \
   libsasl2-dev \
-  && install2.r --error \
-    --deps TRUE \
-    -l /usr/lib/R/library \
-    tidyverse \
-    devtools
+  libsqlite3-dev \
+  libssh2-1-dev \
+  unixodbc-dev
 
-RUN install2.r --error \
-    --deps TRUE \
-    rstan \
-    rstantools
+# RUN add-apt-repository ppa:cran/libgit2 && \
+#   apt-get update && \
+#   apt-get install libssh2-1-dev libgit2-dev
+
+RUN install2.r --error --skipinstalled -n $NCPUS \
+  -l /usr/lib/R/library \
+  tidyverse \
+  devtools \
+  rmarkdown \
+  BiocManager \
+  vroom \
+  gert
+
+RUN install2.r --error --skipinstalled \
+  -l /usr/lib/R/library \
+  --deps TRUE \
+  rstan \
+  rstantools
 
 ## Set up S6 init system
 RUN wget -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz \
@@ -119,3 +133,7 @@ COPY pam-helper.sh /usr/lib/rstudio-server/bin/pam-helper
 EXPOSE 8787
 
 CMD ["/init"]
+
+# docker build -t jadm333/rstudio_xenial_shinyapps_io:latest .
+# docker push jadm333/rstudio_xenial_shinyapps_io:latest
+# docker run -d -p 8787:8787 -e PASSWORD=jacinto123 -e ROOT=TRUE jadm333/rstudio_xenial_shinyapps_io
