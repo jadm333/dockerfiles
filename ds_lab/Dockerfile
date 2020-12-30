@@ -24,4 +24,4 @@ WORKDIR $HOME
 
 # docker build -t jadm333/ds_lab .
 # Flish shell
-# docker run --name ds_lab -it -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -e NB_UID=(id -u) -e NB_GID=(id -g) -e RESTARTABLE=yes -v "$HOME/Documents":/home/jovyan/work jadm333/ds_lab
+# docker run --name ds_lab -it -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -e NB_UID=(id -u) -e NB_GID=(id -g) -e RESTARTABLE=yes -e GRANT_SUDO=yes --user root -v "$HOME/Documents":/home/jovyan/work jadm333/ds_lab
